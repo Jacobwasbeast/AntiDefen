@@ -2,10 +2,9 @@
 using System.Threading;
 using System.Threading.Tasks;
 using AntiDefen.Config;
-using AntiDefen.Logger;
 using Discord;
 using Discord.WebSocket;
-
+using MetaLogging;
 namespace AntiDefen
 {
     class Program
@@ -16,9 +15,9 @@ namespace AntiDefen
         public static async Task Main(string[] args)
         {
             ConfigManager = new ConfigManager();
-            CustomLogger.DebugMode = true;
-            CustomLogger.IncludeCallerInfo = true;
-            CustomLogger.SetLogDirectory(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs"));
+            MetaLogger.DebugMode = true;
+            MetaLogger.IncludeCallerInfo = true;
+            MetaLogger.SetLogDirectory(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs"));
             var config = new DiscordSocketConfig
             {
                 GatewayIntents = GatewayIntents.All | GatewayIntents.MessageContent
@@ -33,11 +32,11 @@ namespace AntiDefen
             {
                 await _client.LoginAsync(TokenType.Bot, ConfigManager.GetConfig()?.discordToken);
                 await _client.StartAsync();
-                CustomLogger.LogInformation("Bot started successfully.");
+                MetaLogger.LogInformation("Bot started successfully.");
             }
             catch (Exception ex)
             {
-                CustomLogger.LogError(ex, "Failed to login");
+                MetaLogger.LogError(ex, "Failed to login");
                 Environment.Exit(1);
             }
 
@@ -54,10 +53,10 @@ namespace AntiDefen
                 var guildUser = user as IGuildUser;
                 if (guildUser?.VoiceChannel != null)
                 {
-                    CustomLogger.LogInformation("User {0} self-deafened in channel {1}", user.Username, guildUser.VoiceChannel.Name);
+                    MetaLogger.LogInformation("User {0} self-deafened in channel {1}", user.Username, guildUser.VoiceChannel.Name);
                     await SendMessageAsync(user);
                     await guildUser.VoiceChannel.Guild.MoveAsync(guildUser, null);
-                    CustomLogger.LogInformation("User {0} has been moved from channel {1}", user.Username, guildUser.VoiceChannel.Name);
+                    MetaLogger.LogInformation("User {0} has been moved from channel {1}", user.Username, guildUser.VoiceChannel.Name);
                 }
             }
         }
@@ -67,11 +66,11 @@ namespace AntiDefen
             try
             {
                 await user.SendMessageAsync(ConfigManager.GetConfig()?.kickMessage);
-                CustomLogger.LogInformation("Sent kick message to user {0}", user.Username);
+                MetaLogger.LogInformation("Sent kick message to user {0}", user.Username);
             }
             catch (Exception ex)
             {
-                CustomLogger.LogWarning("Failed to send message to {0}: {1}", user.Username, ex.Message);
+                MetaLogger.LogWarning("Failed to send message to {0}: {1}", user.Username, ex.Message);
             }
         }
 
@@ -81,20 +80,20 @@ namespace AntiDefen
             {
                 case LogSeverity.Critical:
                 case LogSeverity.Error:
-                    CustomLogger.LogError(log.Message);
+                    MetaLogger.LogError(log.Message);
                     break;
                 case LogSeverity.Warning:
-                    CustomLogger.LogWarning(log.Message);
+                    MetaLogger.LogWarning(log.Message);
                     break;
                 case LogSeverity.Info:
-                    CustomLogger.LogInformation(log.Message);
+                    MetaLogger.LogInformation(log.Message);
                     break;
                 case LogSeverity.Verbose:
                 case LogSeverity.Debug:
-                    CustomLogger.LogDebug(log.Message);
+                    MetaLogger.LogDebug(log.Message);
                     break;
                 default:
-                    CustomLogger.LogInformation(log.Message);
+                    MetaLogger.LogInformation(log.Message);
                     break;
             }
             return Task.CompletedTask;
